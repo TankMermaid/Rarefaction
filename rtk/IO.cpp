@@ -22,9 +22,13 @@ void lineCntOut(options* opts){
 	if (isGZfile(inF)) {
 #ifdef _gzipread
 		in = new igzstream(inF.c_str(), ios::in);
+        #ifdef notRpackage
 		cout << "Reading gzip input\n";
+        #endif
 #else
+        #ifdef notRpackage
 		cout << "gzip not supported in your rtk build\n"; exit(50);
+        #endif
 #endif
 
 	}	else {
@@ -71,15 +75,19 @@ void lineCntOut(options* opts){
         if (cnt == srtTar[j]){
 			if (check4idxMatch) {
 				size_t pos = line.find('\t');
+                #ifdef notRpackage
 				if (pos == std::string::npos) {
 					cout << "requires tab separated row name: line " << cnt << "\n"<<line<<"\n";
 					exit(956);
 				}
+                #endif
 				string rowN = line.substr(0,pos);
+                #ifdef notRpackage
 				if (stoi(rowN) != (int)cnt) {
 					cerr << "mismatch "<<rowN<<" != "<<cnt<<"\n";
 					exit(955);
 				}
+                #endif
 			}
             out << line + "\n";
             uint cur = srtTar[j];
@@ -196,7 +204,7 @@ void smplVec::rarefy(vector<double> depts, string ofile, int rep,
         DivEsts* divs, std::vector<vector<rare_map>> & RareSample,
         vector<string>& retCntsSampleName, string& skippedSample,
         vector<vector<vector<uint>>>* abundInRow, vector<vector<vector<uint>>>* occuencesInRow,
-        int writes,bool write, bool fillret){
+        int writes,bool write, bool fillret, uint seed){
     bool doShuffle = true;
     long curIdx = 0;
     long dep;
@@ -213,13 +221,15 @@ void smplVec::rarefy(vector<double> depts, string ofile, int rep,
 
         if (dep > totSum){
             skippedSample = divs->SampleName;
+            #ifdef notRpackage
             if (verbose){cout<<"skipped sample, because rowSums < depth \n";}
+            #endif
             return;
         }
         //long curIdx=(long)totSum+1;
         for (int curRep=0;curRep<rep;curRep++){
             if(curIdx+dep >= (long) totSum || doShuffle == true){
-                shuffle_singl();	
+                shuffle_singl(seed); 
                 curIdx = 0;
                 doShuffle = false;
             }
@@ -535,12 +545,17 @@ if (verbose){
 }
 }*/
 
-void smplVec::shuffle_singl() {
+void smplVec::shuffle_singl(unsigned int seed) {
     //auto engine = std::default_random_engine{};
 //    std::random_device rd;
 //    auto engine = std::mt19937_64{rd()};
-	unsigned long long seed = (unsigned long long)chrono::high_resolution_clock::now().time_since_epoch().count();
-	auto engine = std::mt19937_64{ seed };
+    unsigned long long seed_use;
+    if(seed == 0){
+        seed_use = (unsigned long long)chrono::high_resolution_clock::now().time_since_epoch().count();
+    }else{
+        seed_use = seed;
+    }
+	auto engine = std::mt19937_64{ seed_use };
     std::shuffle(std::begin(arr), std::end(arr), engine);	
 }
 

@@ -9,10 +9,10 @@ textBlock* getClusBlock(FILE* incl,string& lastline) {//istream& incl
 		ret->txt.push_back(lastline);
 	} else {
 		//getline(incl, line);
-		fgets(buf, sizeof buf, incl);
-		buf[strcspn(buf, "\n")] = 0;
-
-		ret->txt.push_back(string(buf));
+		if(fgets(buf, sizeof buf, incl) != NULL){
+			buf[strcspn(buf, "\n")] = 0;
+			ret->txt.push_back(string(buf));
+        }
 	}
 	while (fgets(buf, sizeof buf, incl) != NULL) {
 		buf[strcspn(buf, "\n")] = 0;
@@ -397,12 +397,16 @@ void ClStr2Mat::read_map(const string mapF,bool calcCoverage, bool calcCovMedian
 				}
 				if (segments == "AssmblGrps") {
 					assGrpN = sbcnt;
+                    #ifdef notRpackage
 					cout << "Found Assembly groups in map\n";
+                    #endif
 				}
 				if (segments == "MapGrps") {
 					mapGrpN = sbcnt;
 					//fillMapGrp = true;
+                    #ifdef notRpackage
 					cout << "Found Mapping groups in map\n";
+                    #endif
 				}
 				if (segments == "ExcludeAssembly") {
 					skSmplCol = sbcnt; 
